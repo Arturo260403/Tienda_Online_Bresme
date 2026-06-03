@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paleta corporativa oficial de Bresme: Rojo / Negro / Blanco */
+  --color-rojo-bresme: #e30613;
+  --color-rojo-bresme-oscuro: #b80510;
+  --color-negro-bresme: #111111;
+}
