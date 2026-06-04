@@ -163,7 +163,7 @@ precio); por eso el tipo está en una sola constante (`IVA` en
   seleccionada, lo que resuelve la ambigüedad del valor `"General"`.
 - **Paginación "Cargar más"** en lugar de scroll infinito: más simple, sin
   listeners de scroll y más fácil de verificar.
-- **Responsive**: rejilla de 1 a 4 columnas según el ancho y barra de filtros
+- **Responsive**: rejilla de 2 a 4 columnas según el ancho y barra de filtros
   adaptable.
 
 ### Paleta corporativa
@@ -220,24 +220,23 @@ para reiniciar tras las pruebas).
 
 ## Calidad: accesibilidad, SEO y rendimiento
 
-Auditoría con **Lighthouse** (Chrome DevTools), sobre la vista de catálogo:
+Auditoría con **Lighthouse** (Chrome DevTools) sobre la build de producción
+desplegada en Vercel:
 
+- **Rendimiento: 100**
 - **Accesibilidad: 100**
 - **Buenas prácticas: 100**
 - **SEO: 100**
-- **Rendimiento: 86**
 
 **Accesibilidad.** Etiquetas asociadas a cada control de formulario, foco
 visible, modal con `role="dialog"`/`aria-modal` y cierre con Escape, tarjetas
-operables por teclado y **contraste de color revisado** (ajusté los rojos sobre
-fondo oscuro y los grises de menor contraste para cumplir el ratio mínimo).
+operables por teclado y **contraste de color revisado** para cumplir el ratio
+mínimo (ajusté los rojos sobre fondo oscuro y los grises de menor contraste).
 
-**Rendimiento (86).** La medición se hace en **modo desarrollo**, donde Vite no
-minifica el JavaScript (de ahí los avisos "Minify/Reduce JavaScript"); en la
-**build de producción** ese coste desaparece. El margen restante corresponde a
-las **imágenes de producto**, que se sirven tal cual desde bresme.com sin
-optimizar (no las reescalo ni convierto a WebP para no alterar el material
-original). Ambos puntos son conocidos y de solución directa.
+> Nota: la puntuación se mide sobre la **build de producción** (Vercel /
+> `npm run build`). En modo desarrollo (`npm run dev`) el rendimiento baja
+> porque Vite no minifica el JavaScript; es lo esperado y no afecta a la versión
+> publicada.
 
 ---
 
@@ -471,10 +470,6 @@ hace falta contexto y gusto que la IA no tiene.
 
 ![PWA instalada](capturas/pwa.png)
 
-**Auditoría Lighthouse (puntuaciones)**
+**Auditoría Lighthouse (100 en las cuatro categorías)**
 
-![Lighthouse puntuaciones](capturas/lighthouse.png)
-
-**Auditoría Lighthouse (rendimiento)**
-
-![Lighthouse rendimiento](capturas/lighthouse-performance.png)
+![Lighthouse 100](capturas/lighthouse.png)
