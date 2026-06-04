@@ -375,7 +375,6 @@ Usé **Claude (Anthropic)** como asistente principal, en tareas concretas:
 - Generar los componentes React.
 - Diseñar el script de automatización de imágenes, partiendo de inspeccionar
   cómo bresme.com sirve las imágenes por referencia.
-- Añadir el stock simulado con su panel de almacén.
 
 **2. Pega aquí 1 prompt completo (sin recortar) que te resultó útil.**
 
@@ -387,7 +386,7 @@ Hola Claude. He adjuntado el Excel con los 60 productos de la empresa Bresme y l
 
 En las **decisiones de criterio y de producto**, que preferí tomar yo:
 
-- Corregir la paleta de colores.
+- Elegir la paleta de colores.
 - Ajustes visuales, tamaño del logo.
 - Comportamiento responsive.
 - Organización de carpetas y archivos.
@@ -395,6 +394,7 @@ En las **decisiones de criterio y de producto**, que preferí tomar yo:
 - Decidir los umbrales de stock: cuándo algo es "Pocas unidades" vs "Disponible".
 - La interpretación del IVA.
 - Elegir "Cargar más" en lugar de scroll infinito.
+- Añadir el stock simulado con su panel de almacén.
 
 **4. Un caso en el que la IA te dio una respuesta que NO usaste tal cual.
 ¿Cómo te diste cuenta y qué hiciste?**
