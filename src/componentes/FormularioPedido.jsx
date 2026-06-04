@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { usarCarrito } from "../contexto/ContextoCarrito";
+import { usarInventario } from "../contexto/ContextoInventario";
 import { formatearPrecio } from "../librerias/formato";
 
 export default function FormularioPedido({ alVolver }) {
   const { articulos, subtotal, importeIva, total, IVA, vaciar } = usarCarrito();
+  const { descontar } = usarInventario();
 
-  // Datos del formulario de envío (componente controlado).
   const [datos, setDatos] = useState({
     nombre: "",
     direccion: "",
@@ -14,17 +15,15 @@ export default function FormularioPedido({ alVolver }) {
     notas: "",
   });
 
-  // Estado de la confirmación. Guardamos número, total y correo ANTES de
-  // vaciar el carrito, para poder mostrarlos en la pantalla de éxito.
+  // Guardamos número, total y correo ANTES de vaciar, para la pantalla de éxito.
   const [pedido, setPedido] = useState(null);
 
   const actualizarCampo = (campo) => (e) =>
     setDatos((prev) => ({ ...prev, [campo]: e.target.value }));
 
   const realizarPedido = (e) => {
-    e.preventDefault(); // evita que el formulario recargue la página
+    e.preventDefault();
 
-    // Número de pedido aleatorio de 4 dígitos (1000-9999).
     const numero = Math.floor(1000 + Math.random() * 9000);
 
     setPedido({
@@ -34,10 +33,11 @@ export default function FormularioPedido({ alVolver }) {
       nombre: datos.nombre,
     });
 
-    vaciar(); // checkout simulado: se vacía el carrito tras confirmar
+    descontar(articulos); // baja el stock de cada artículo del pedido
+    vaciar(); // checkout simulado: se vacía el carrito
   };
 
-  // --- Pantalla de éxito ---------------------------------------------------
+  // --- Pantalla de éxito ---
   if (pedido) {
     return (
       <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-4 py-12 text-center">
@@ -88,7 +88,7 @@ export default function FormularioPedido({ alVolver }) {
     );
   }
 
-  // --- Carrito vacío (no debería ocurrir, pero lo cubrimos) ----------------
+  // --- Carrito vacío ---
   if (articulos.length === 0) {
     return (
       <main className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 text-center">
@@ -105,7 +105,7 @@ export default function FormularioPedido({ alVolver }) {
     );
   }
 
-  // --- Formulario de envío -------------------------------------------------
+  // --- Formulario de envío ---
   const claseCampo =
     "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-rojo-bresme focus:ring-2 focus:ring-rojo-bresme/30";
 
@@ -124,7 +124,6 @@ export default function FormularioPedido({ alVolver }) {
       </p>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
-        {/* Formulario */}
         <form onSubmit={realizarPedido} className="space-y-4">
           <div>
             <label htmlFor="nombre" className="mb-1 block text-sm font-medium text-neutral-700">
@@ -205,7 +204,6 @@ export default function FormularioPedido({ alVolver }) {
           </button>
         </form>
 
-        {/* Resumen del pedido */}
         <aside className="h-fit rounded-xl border border-neutral-200 bg-white p-5">
           <h2 className="text-sm font-bold text-negro-bresme">Resumen</h2>
           <ul className="mt-3 space-y-2 text-sm">

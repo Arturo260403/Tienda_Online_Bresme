@@ -1,8 +1,9 @@
 # Mini-tienda online — Bresme
 
 Prueba técnica · Desarrollador Web & App. Catálogo de 60 artículos reales de
-Bresme (marca HAUKKA) con filtros, ficha de producto, carrito persistente y
-checkout simulado. Construida con **React + Vite + Tailwind CSS v4**.
+Bresme (marca HAUKKA) con filtros, ficha de producto, carrito persistente,
+checkout simulado y **stock funcional**. Construida con
+**React + Vite + Tailwind CSS v4**.
 
 > Las imágenes de producto se obtienen automáticamente desde
 > [bresme.com](https://www.bresme.com) mediante un script (ver
@@ -16,6 +17,8 @@ checkout simulado. Construida con **React + Vite + Tailwind CSS v4**.
 - [Cómo arrancar](#cómo-arrancar)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Decisiones técnicas y de arquitectura](#decisiones-técnicas-y-de-arquitectura)
+- [Stock simulado y panel de almacén](#stock-simulado-y-panel-de-almacén)
+- [Calidad: accesibilidad, SEO y rendimiento](#calidad-accesibilidad-seo-y-rendimiento)
 - [Automatización de imágenes](#automatización-de-imágenes)
 - [Bonus: app instalable (PWA)](#bonus-app-instalable-pwa)
 - [De web a app (parte teórica)](#de-web-a-app-parte-teórica)
@@ -46,8 +49,8 @@ checkout simulado. Construida con **React + Vite + Tailwind CSS v4**.
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/<tu-usuario>/<nombre-repo>.git
-cd <nombre-repo>
+git clone https://github.com/Arturo260403/Tienda_Online_Bresme.git
+cd Tienda_Online_Bresme
 
 # 2. Instalar dependencias
 npm install
@@ -63,7 +66,6 @@ npm run dev
 ```
 
 Abre la URL que indica la terminal (por defecto `http://localhost:5173`).
-
 
 ### Build de producción
 
@@ -83,27 +85,30 @@ npm run preview   # sirve dist/ localmente para revisarlo
 │   └── descargar-marca.mjs      # descarga logo + favicon de Bresme
 ├── public/
 │   ├── imagenes/                # imágenes de producto (generadas por el script)
-│   ├── logo-bresme.svg          # logotipo (descargado por descargar-marca.mjs)
-│   ├── favicon-bresme.png       # favicon (descargado por descargar-marca.mjs)
+│   ├── logo-bresme.svg          # logotipo
+│   ├── favicon-bresme.png       # favicon
 │   ├── icono-192.png            # icono PWA
-│   └── icono-512.png            # icono PWA
+│   ├── icono-512.png            # icono PWA
+│   └── robots.txt               # para buscadores
 ├── src/
 │   ├── componentes/
-│   │   ├── Cabecera.jsx          # cabecera con logo y acceso al carrito
+│   │   ├── Cabecera.jsx          # franja de envío + logo + acceso al carrito
 │   │   ├── BarraFiltros.jsx      # filtros encadenados + buscador
 │   │   ├── TarjetaProducto.jsx   # tarjeta del catálogo
 │   │   ├── FichaProducto.jsx     # modal con ficha técnica
 │   │   ├── DesplegableCarrito.jsx# panel lateral del carrito
 │   │   ├── FormularioPedido.jsx  # checkout simulado
+│   │   ├── PanelAlmacen.jsx      # panel de stock (uso interno)
 │   │   └── MiniaturaProducto.jsx # placeholder "Sin imagen"
 │   ├── contexto/
-│   │   └── ContextoCarrito.jsx   # estado global del carrito + persistencia
+│   │   ├── ContextoCarrito.jsx   # estado global del carrito + persistencia
+│   │   └── ContextoInventario.jsx# estado global del stock + persistencia
 │   ├── librerias/
 │   │   └── formato.js            # formateo de precios y etiquetas de stock
 │   ├── data/
 │   │   └── productos.json        # 60 productos ya procesados
 │   ├── App.jsx                   # orquestador (vistas, filtros, paginación)
-│   ├── main.jsx                  # punto de entrada (envuelve el ProveedorCarrito)
+│   ├── main.jsx                  # punto de entrada (envuelve los proveedores)
 │   └── index.css                 # Tailwind v4 + paleta corporativa
 └── index.html
 ```
@@ -149,20 +154,15 @@ precio); por eso el tipo está en una sola constante (`IVA` en
 - **Separación por responsabilidades** en `componentes/`, `contexto/` y
   `librerias/`, dejando `App.jsx` como orquestador (estado de UI, filtrado y
   composición).
-- **Carrito con Context + `useReducer`** para compartir el estado sin prop
-  drilling. La **persistencia** se hace con `localStorage`: se lee al iniciar
-  (lazy initializer) y se reescribe en cada cambio mediante un `useEffect`. Los
-  totales son **derivados** (se recalculan en cada render), no se guardan, lo
-  que evita estados desincronizados.
+- **Estado global con Context + `useReducer`** para el carrito y para el
+  inventario, sin prop drilling. La **persistencia** se hace con `localStorage`:
+  se lee al iniciar (lazy initializer) y se reescribe en cada cambio con un
+  `useEffect`. Los totales del carrito son **derivados** (se recalculan en cada
+  render), no se guardan, lo que evita estados desincronizados.
 - **Filtros encadenados**: la subcategoría depende de la categoría
-  seleccionada, lo que resuelve la ambigüedad del valor `"General"` (que
-  aparece en varias categorías).
+  seleccionada, lo que resuelve la ambigüedad del valor `"General"`.
 - **Paginación "Cargar más"** en lugar de scroll infinito: más simple, sin
-  listeners de scroll y más fácil de verificar. El código indica cómo cambiarlo
-  a `IntersectionObserver` si se quisiera scroll infinito.
-- **Accesibilidad**: etiquetas asociadas a cada control de formulario, foco
-  visible, modal con `role="dialog"`/`aria-modal`, cierre con Escape y bloqueo
-  del scroll de fondo, y tarjetas operables por teclado.
+  listeners de scroll y más fácil de verificar.
 - **Responsive**: rejilla de 1 a 4 columnas según el ancho y barra de filtros
   adaptable.
 
@@ -170,8 +170,74 @@ precio); por eso el tipo está en una sola constante (`IVA` en
 
 Definida con `@theme` (Tailwind v4): rojo `#e30613`, negro `#111111` y blanco.
 Mantuve colores semánticos (verde/ámbar) **solo** en la etiqueta de
-disponibilidad, porque ahí el color comunica un estado y forzarlo a la paleta
-de marca perjudicaría la usabilidad.
+disponibilidad, porque ahí el color comunica un estado.
+
+---
+
+## Stock simulado y panel de almacén
+
+El stock es **funcional y reacciona a las compras**, simulado en el navegador
+(`localStorage`), ya que el proyecto no tiene backend.
+
+### Modelo sin reserva
+
+El stock **no baja al añadir al carrito**; baja **únicamente al confirmar el
+pedido**. Tener un producto en el carrito no garantiza su disponibilidad. Es el
+modelo de tiendas con stock limitado, y evita reservas con temporizador que,
+sin un backend compartido, serían solo decorativas.
+
+Cómo se refleja en la interfaz:
+
+- La disponibilidad (`Disponible` / `Pocas unidades` / `Sin stock`) se calcula
+  a partir del stock **real** en cada momento.
+- En la ficha, la cantidad se puede **escribir** o ajustar con `+` / `−`. Si
+  supera el stock, avisa ("Solo quedan N unidades") y no deja añadir.
+- Si un producto llega a 0, el botón pasa a "Sin stock" y se deshabilita.
+- Aviso explícito en la ficha: *"El stock no se reserva hasta confirmar el
+  pedido."*
+- Al confirmar el pedido, se descuentan las unidades y el estado se actualiza.
+
+### Panel de almacén (uso interno)
+
+Vista que simula la gestión de inventario de un trabajador (acceso discreto en
+el pie, "Acceso almacén"): stock por referencia, resumen (referencias, unidades
+totales, pocas unidades, agotados), filtros por estado y un botón **"Reponer
+stock"** que restablece el inventario a los valores del catálogo (útil también
+para reiniciar tras las pruebas).
+
+### Límites conscientes (qué haría en producción)
+
+- El stock vive en `localStorage`; en un sistema real estaría en un **backend
+  con base de datos compartida**, única fuente de verdad para web, app y almacén.
+- El acceso al panel estaría **protegido tras autenticación** (rol de
+  administrador). No implemento login porque, sin backend, sería solo
+  decorativo y no aportaría seguridad real.
+- La reposición permitiría **fijar o sumar cantidades** (entrada de mercancía),
+  no solo restablecer; lo limito a un reseteo porque el stock de partida es el
+  del Excel y no quería inventar datos fuera del enunciado.
+
+---
+
+## Calidad: accesibilidad, SEO y rendimiento
+
+Auditoría con **Lighthouse** (Chrome DevTools), sobre la vista de catálogo:
+
+- **Accesibilidad: 100**
+- **Buenas prácticas: 100**
+- **SEO: 100**
+- **Rendimiento: 86**
+
+**Accesibilidad.** Etiquetas asociadas a cada control de formulario, foco
+visible, modal con `role="dialog"`/`aria-modal` y cierre con Escape, tarjetas
+operables por teclado y **contraste de color revisado** (ajusté los rojos sobre
+fondo oscuro y los grises de menor contraste para cumplir el ratio mínimo).
+
+**Rendimiento (86).** La medición se hace en **modo desarrollo**, donde Vite no
+minifica el JavaScript (de ahí los avisos "Minify/Reduce JavaScript"); en la
+**build de producción** ese coste desaparece. El margen restante corresponde a
+las **imágenes de producto**, que se sirven tal cual desde bresme.com sin
+optimizar (no las reescalo ni convierto a WebP para no alterar el material
+original). Ambos puntos son conocidos y de solución directa.
 
 ---
 
@@ -188,18 +254,16 @@ https://www.bresme.com/img/personalizacion/bresme/products/list/{REFERENCIA}.jpg
 ```
 
 Por eso **no scrapeo HTML ni adivino slugs** (que en bresme.com son
-inconsistentes: unos llevan prefijo `pXXXXX-` y otros no). El script
-`automatizacion/descargar-imagenes.mjs`:
+inconsistentes). El script `automatizacion/descargar-imagenes.mjs`:
 
 1. Recorre los 60 productos del JSON.
 2. Construye la URL desde la referencia (primero `zoom`, luego `list` como
    respaldo).
 3. **Verifica** que la respuesta es `200`, que el `content-type` es una imagen
-   y que pesa más de 1 KB (así descarta páginas de error/placeholders).
+   y que pesa más de 1 KB (descarta páginas de error/placeholders).
 4. Descarga el archivo a `public/imagenes/{ref}.jpg` y actualiza el campo
    `imagen` del JSON.
-5. Si no encuentra imagen, deja `imagen: null` (placeholder) y lo registra en
-   el informe final.
+5. Si no encuentra imagen, deja `imagen: null` (placeholder) y lo registra.
 
 ### Por qué esta estrategia
 
@@ -210,9 +274,9 @@ inconsistentes: unos llevan prefijo `pXXXXX-` y otros no). El script
 
 ### Cobertura conseguida
 
-**60/60 imágenes (100%)**, 0 sin imagen. El script funcionó tanto con
-referencias numéricas (`030729`) como con las que llevan prefijo `P`
-(`P19287`), porque usa la referencia tal cual sin asumir formato.
+**60/60 imágenes (100%)**, 0 sin imagen. Funcionó tanto con referencias
+numéricas (`030729`) como con las que llevan prefijo `P` (`P19287`), porque usa
+la referencia tal cual sin asumir formato.
 
 ---
 
@@ -223,90 +287,78 @@ instalable y con soporte offline, usando `vite-plugin-pwa`.
 
 - **Por qué PWA y no una app aparte:** el enunciado lista la PWA como una de las
   opciones válidas para el bonus. Convertir la web en PWA reaprovecha el 100%
-  del código ya hecho, no duplica una "mini-app" y conecta directamente con la
-  sección teórica de más abajo (lo que se propone en la teoría, aquí se
-  demuestra en la práctica). Por eso **no existe una carpeta `app/`**: la app
-  *es* la propia web instalable.
-- **Qué incluye:** un *Web App Manifest* (nombre, iconos de marca de 192 y 512
-  px, color corporativo) y un *service worker* que precachea el App Shell y las
-  imágenes para funcionar sin conexión.
+  del código ya hecho y conecta directamente con la sección teórica de más
+  abajo. Por eso **no existe una carpeta `app/`**: la app *es* la propia web
+  instalable.
+- **Qué incluye:** un *Web App Manifest* (nombre, iconos de 192 y 512 px, color
+  corporativo) y un *service worker* que precachea el App Shell y las imágenes.
 - **Cómo probarlo:** `npm run dev` y usar el botón "Instalar" del navegador, o
-  `npm run build && npm run preview` para la versión de producción. Auditable
-  con Lighthouse (categoría PWA) y en la pestaña *Application* de DevTools.
+  `npm run build && npm run preview` para producción. Auditable con Lighthouse y
+  en la pestaña *Application* de DevTools.
 
-> Nota: el proyecto no tiene un backend HTTP; los datos son un JSON
-> local. La PWA "consume la misma fuente de datos" que la web, que es el
-> `productos.json`.
+---
 
 ## De web a app (parte teórica)
 
 ### ¿Cómo convertiría esta experiencia en una app para iPad y Android?
 
-Para el caso concreto de Bresme un catálogo con carrito y checkout, donde el
-contenido cambia poco y no se necesita hardware del dispositivo las opciones se
+Para el caso concreto de Bresme —un catálogo con carrito y checkout, donde el
+contenido cambia poco y no se necesita hardware del dispositivo— las opciones se
 valoran así:
 
-- **PWA (Progressive Web App).** Es la opción más rentable: reaprovecha
-  casi todo el código React actual, se instala desde el navegador,
-  funciona offline con un service worker y se actualiza sin pasar por las
-  tiendas. *Contras*: integración limitada con funciones nativas y presencia
-  más débil en las stores (en iOS las PWA tienen algunas limitaciones de
-  notificaciones y almacenamiento).
+- **PWA (Progressive Web App).** La opción más rentable: reaprovecha casi todo
+  el código React actual, se instala desde el navegador, funciona offline con un
+  service worker y se actualiza sin pasar por las tiendas. *Contras*:
+  integración limitada con funciones nativas y, en iOS, algunas limitaciones de
+  notificaciones y almacenamiento.
 - **Híbrida (React Native / Flutter / .NET MAUI).** Un único código para iOS y
   Android con apps reales en las tiendas y buen acceso a APIs nativas. **React
-  Native** sería la más natural aquí por la afinidad con el stack actual (React,
-  JS, mismo modelo mental). *Contras*: hay que reescribir la capa de UI (RN no
-  usa HTML/CSS), mantener build/publicación en stores y gestionar dependencias
-  nativas.
+  Native** sería la más natural por la afinidad con el stack actual. *Contras*:
+  hay que reescribir la capa de UI, mantener publicación en stores y gestionar
+  dependencias nativas.
 - **Nativa (Swift + Kotlin).** Máximo rendimiento e integración, pero dos bases
-  de código y el mayor coste de desarrollo y mantenimiento. **Injustificada**
-  para un catálogo de este tipo.
+  de código y el mayor coste. **Injustificada** para un catálogo de este tipo.
 
-**Recomendación para Bresme:** empezar por **PWA** (coste mínimo, reaprovecha
-el trabajo hecho) y, si el negocio exige presencia en stores o funciones
-nativas, dar el salto a **React Native**.
+**Recomendación para Bresme:** empezar por **PWA** y, si el negocio exige
+presencia en stores o funciones nativas, dar el salto a **React Native**.
 
 ### ¿Qué cambiaría del backend o del API?
 
 Hoy los datos están en un JSON local. Para servir a web y app a la vez,
 extraería una **API REST (o GraphQL) común** como única fuente de verdad:
 
-- Endpoints como `GET /productos`, `GET /productos/{id}`, `GET /categorias`,
-  y un `POST /pedidos` para el checkout real.
+- Endpoints como `GET /productos`, `GET /productos/{id}`, `GET /categorias` y un
+  `POST /pedidos` para el checkout real.
 - **Paginación, filtrado y búsqueda en servidor** (hoy se hacen en cliente
   porque son solo 60 productos; con miles no sería viable).
-- Respuestas pensadas para varios clientes: imágenes en varias resoluciones,
-  versionado del API y autenticación con tokens (JWT) si hubiera cuentas.
-- El cálculo de IVA y totales debería confirmarse en servidor, no fiarse solo
-  del cliente.
+- El **stock** viviría aquí (no en `localStorage`), como fuente compartida entre
+  web, app y el panel de almacén.
+- El cálculo de IVA y totales debería confirmarse en servidor.
 
 ### ¿Qué patrones de navegación y UX cambian?
 
-- En web, la barra de filtros superior y el grid amplio funcionan; en móvil, los
-  filtros suelen ir en un **panel/bottom sheet** desplegable y la navegación
-  principal en una **tab bar inferior** (Catálogo, Buscar, Carrito, Cuenta).
+- En móvil, los filtros suelen ir en un **panel/bottom sheet** desplegable y la
+  navegación en una **tab bar inferior**.
 - El carrito lateral (drawer) encaja en móvil, pero el checkout conviene
   dividirlo en **pasos** en pantallas pequeñas.
-- Gestos táctiles (deslizar para eliminar del carrito), objetivos de toque más
-  grandes y teclado contextual en los formularios.
+- Gestos táctiles, objetivos de toque más grandes y teclado contextual.
 
 ### ¿Cómo manejaría el modo offline?
 
-- **PWA**: service worker que cachea el "App Shell" (HTML/JS/CSS) y las imágenes
-  ya vistas; el catálogo se guarda en IndexedDB para consultarlo sin conexión.
-- El **carrito ya es offline-first** (vive en almacenamiento local); en una app
-  se haría lo mismo con almacenamiento del dispositivo.
+- **PWA**: service worker que cachea el App Shell y las imágenes; el catálogo se
+  guarda en IndexedDB para consultarlo sin conexión.
+- El **carrito ya es offline-first** (vive en almacenamiento local).
 - Los pedidos creados sin conexión se encolarían y se sincronizarían al
   recuperar la red (background sync).
 
 ### ¿Qué reutilizaría y qué tiraría?
 
-- **Reutilizaría**: toda la **lógica** (filtrado, estado del carrito, cálculo de
+- **Reutilizaría**: toda la **lógica** (filtrado, carrito, stock, cálculo de
   IVA, formateo, modelo de datos) y las decisiones de UX; en una PWA, además,
   casi todos los componentes React.
 - **Tiraría/adaptaría**: en una app nativa o React Native, la **capa de
-  presentación** basada en HTML + clases de Tailwind, que habría que reescribir
-  con los componentes de cada plataforma.
+  presentación** basada en HTML + Tailwind, que habría que reescribir con los
+  componentes de cada plataforma.
 
 ---
 
@@ -323,14 +375,13 @@ Usé **Claude (Anthropic)** como asistente principal, en tareas concretas:
 - Generar los componentes React.
 - Diseñar el script de automatización de imágenes, partiendo de inspeccionar
   cómo bresme.com sirve las imágenes por referencia.
-
+- Añadir el stock simulado con su panel de almacén.
 
 **2. Pega aquí 1 prompt completo (sin recortar) que te resultó útil.**
 
 ```
 Hola Claude. He adjuntado el Excel con los 60 productos de la empresa Bresme y las instrucciones de mi prueba técnica para que los analices. Actúa como un Ingeniero de Software Principal. Confírmame que puedes leer correctamente ambos archivos y hazme un breve resumen de los requisitos obligatorios que debe tener la tienda online.
 ```
-
 
 **3. ¿En qué momentos decidiste NO usar IA y por qué?**
 
@@ -341,8 +392,8 @@ En las **decisiones de criterio y de producto**, que preferí tomar yo:
 - Comportamiento responsive.
 - Organización de carpetas y archivos.
 - Verificar los datos del Excel a mano.
-- Decidir los umbrales de stock: Elegir cuándo algo es "Pocas unidades" vs "Disponible"
-- La interpretación del IVA
+- Decidir los umbrales de stock: cuándo algo es "Pocas unidades" vs "Disponible".
+- La interpretación del IVA.
 - Elegir "Cargar más" en lugar de scroll infinito.
 
 **4. Un caso en el que la IA te dio una respuesta que NO usaste tal cual.
@@ -367,16 +418,14 @@ sintaxis que no existen?**
 - **Contrasto con la documentación oficial** cuando algo "huele" a versión
   antigua (por ejemplo, la instalación de Tailwind cambió de la v3 a la v4).
 
-
 **6. ¿En qué partes de tu día a día crees que la IA aporta más? ¿Y en cuáles
 poco o nada?**
 
-Aporta más en: código repetitivo, montar la estructura inicial,
-explorar herramientas o versiones que no uso a diario, y depurar errores con un
-mensaje concreto. Aporta poco en: decisiones de producto y de negocio, entender
-las particularidades reales de los datos del cliente, y el criterio de diseño;
-ahí hace falta contexto y gusto que la IA no tiene.
-
+Aporta más en: código repetitivo, montar la estructura inicial, explorar
+herramientas o versiones que no uso a diario, y depurar errores con un mensaje
+concreto. Aporta poco en: decisiones de producto y de negocio, entender las
+particularidades reales de los datos del cliente, y el criterio de diseño; ahí
+hace falta contexto y gusto que la IA no tiene.
 
 **7. Tres reglas para alguien que empieza a usar IA para programar.**
 
@@ -386,10 +435,9 @@ ahí hace falta contexto y gusto que la IA no tiene.
 3. **Las decisiones son tuyas**: la IA es una herramienta que acelera, pero el
    diseño y el criterio los pones tú.
 
-
+---
 
 ## Capturas
-
 
 **Catálogo (escritorio)**
 
@@ -407,6 +455,14 @@ ahí hace falta contexto y gusto que la IA no tiene.
 
 ![Checkout](capturas/checkout.png)
 
+**Enlace panel de almacén (uso interno)**
+
+![Enlace panel de almacén](capturas/almacen-enlace.png)
+
+**Panel de almacén (uso interno)**
+
+![Panel de almacén](capturas/almacen.png)
+
 **Vista móvil (responsive)**
 
 ![Móvil](capturas/movil.png)
@@ -414,3 +470,11 @@ ahí hace falta contexto y gusto que la IA no tiene.
 **App instalada (PWA)**
 
 ![PWA instalada](capturas/pwa.png)
+
+**Auditoría Lighthouse (puntuaciones)**
+
+![Lighthouse puntuaciones](capturas/lighthouse.png)
+
+**Auditoría Lighthouse (rendimiento)**
+
+![Lighthouse rendimiento](capturas/lighthouse-performance.png)

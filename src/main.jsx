@@ -3,11 +3,14 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import { ProveedorCarrito } from "./contexto/ContextoCarrito.jsx";
+import { ProveedorInventario } from "./contexto/ContextoInventario.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ProveedorCarrito>
-      <App />
-    </ProveedorCarrito>
+    <ProveedorInventario>
+      <ProveedorCarrito>
+        <App />
+      </ProveedorCarrito>
+    </ProveedorInventario>
   </StrictMode>
 );

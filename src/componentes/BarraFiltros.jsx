@@ -48,7 +48,7 @@ export default function BarraFiltros({
     "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-rojo-bresme focus:ring-2 focus:ring-rojo-bresme/30";
 
   return (
-    <div className="sticky top-[73px] z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
+    <div className="bg-white/90 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {/* Buscador */}
