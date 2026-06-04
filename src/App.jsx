@@ -87,8 +87,8 @@ export default function App() {
   // Vista de catálogo
   return (
     <div className="min-h-screen bg-neutral-50 text-negro-bresme">
-      {/* Cabecera + filtros pegajosos */}
-      <div className="sm:sticky sm:top-0 z-30 border-b border-neutral-200">
+      {/* Cabecera + filtros (suben con el scroll, no fijos) */}
+      <div className="border-b border-neutral-200">
         <Cabecera alAbrirCarrito={() => setCarritoAbierto(true)} />
         <BarraFiltros
           busqueda={busqueda}
@@ -106,7 +106,7 @@ export default function App() {
       <section className="relative overflow-hidden bg-negro-bresme">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-500">
-            Catálogo 
+            Catálogo profesional
           </p>
           <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-white sm:text-4xl">
             Ferretería y maquinaria para profesionales
