@@ -88,7 +88,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-neutral-50 text-negro-bresme">
       {/* Cabecera + filtros pegajosos */}
-      <div className="sticky top-0 z-30 border-b border-neutral-200">
+      <div className="sm:sticky sm:top-0 z-30 border-b border-neutral-200">
         <Cabecera alAbrirCarrito={() => setCarritoAbierto(true)} />
         <BarraFiltros
           busqueda={busqueda}
